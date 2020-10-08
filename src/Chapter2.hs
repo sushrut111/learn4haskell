@@ -200,17 +200,17 @@ to guess first, what you will see.
 >>> [10, 9 .. 1]  -- backwards list with explicit step
 [10,9,8,7,6,5,4,3,2,1]
 >>> length [4, 10, 5]  -- list length
-
+3
 >>> replicate 5 True
-
+[True,True,True,True,True]
 >>> take 5 "Hello, World!"
-
+"Hello"
 >>> drop 5 "Hello, World!"
-
+", World!"
 >>> zip "abc" [1, 2, 3]  -- convert two lists to a single list of pairs
-
+[('a',1),('b',2),('c',3)]
 >>> words "Hello   Haskell     World!"  -- split the string into the list of words
-
+["Hello","Haskell","World!"]
 
 
 👩‍🔬 Haskell has a lot of syntax sugar. In the case with lists, any
