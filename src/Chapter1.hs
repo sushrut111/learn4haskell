@@ -305,7 +305,7 @@ expressions in GHCi
 >>> 10 - 15
 -5
 >>> 10 - (-5)  -- negative constants require ()
-
+15
 >>> (3 + 5) < 10
 True
 >>> True && False
@@ -510,7 +510,7 @@ branches because it is an expression and it must always return some value.
   satisfying the check will be returned and, therefore, evaluated.
 -}
 closestToZero :: Int -> Int -> Int
-closestToZero x y = if abs(x) > abs(y) then y else x 
+closestToZero x y = if abs x  > abs y then y else x 
 
 
 {- |
@@ -551,9 +551,9 @@ mid x y z
  | (z > x) && (x > y) = x
  | (y > z) && (z > x) = z
  | (x > z) && (z > y) = z
- | (x == y) = x
- | (y == z) = y
- | (x == z) = x
+ | x == y = x
+ | y == z = y
+ | x == z = x
 
 
 {- |
@@ -663,7 +663,7 @@ aren't ready for this boss yet!
 -}
 firstDigit :: Int -> Int
 firstDigit n
- | abs(n) < 10 = abs(n)
+ | abs(n) < 10 = abs n
  | otherwise = firstDigit (div (abs n) 10)
 
 
