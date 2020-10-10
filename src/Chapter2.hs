@@ -877,10 +877,15 @@ and reverses it.
   function, but in this task, you need to implement it manually. No
   cheating!
 -}
+-- rewind :: [a] -> [a]
+-- rewind [] = []
+-- rewind (x:[]) = [x]
+-- rewind (x:xs) = (rewind xs) ++ [x]
 rewind :: [a] -> [a]
-rewind [] = []
-rewind (x:[]) = [x]
-rewind (x:xs) = (rewind xs) ++ [x]
+rewind l = go [] l
+  where
+    go acc [] = acc
+    go acc (x:xs) = go (x:acc) xs
 
 
 {-
