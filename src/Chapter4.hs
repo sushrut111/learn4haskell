@@ -41,7 +41,6 @@ Perfect. Let's crush this!
 {-# LANGUAGE InstanceSigs    #-}
 
 module Chapter4 where
-
 {- |
 =🛡= Kinds
 
@@ -114,23 +113,23 @@ As always, try to guess the output first! And don't forget to insert
 the output in here:
 
 >>> :k Char
-
+Char :: *
 >>> :k Bool
-
+Bool :: *
 >>> :k [Int]
-
+[Int] :: *
 >>> :k []
-
+[] :: * -> *
 >>> :k (->)
-
+(->) :: * -> * -> *
 >>> :k Either
-
+Either :: * -> * -> *
 >>> data Trinity a b c = MkTrinity a b c
 >>> :k Trinity
-
+Trinity :: * -> * -> * -> *
 >>> data IntBox f = MkIntBox (f Int)
 >>> :k IntBox
-
+IntBox :: (* -> *) -> *
 -}
 
 {- |
@@ -293,7 +292,8 @@ values and apply them to the type level?
 -}
 instance Functor (Secret e) where
     fmap :: (a -> b) -> Secret e a -> Secret e b
-    fmap = error "fmap for Box: not implemented!"
+    fmap _ (Trap a) = Trap a
+    fmap f (Reward a) = Reward (f a)
 
 {- |
 =⚔️= Task 3
@@ -305,7 +305,12 @@ typeclasses for standard data types.
 -}
 data List a
     = Empty
-    | Cons a (List a)
+    | Cons a (List a) deriving(Show)
+
+instance Functor List where
+    fmap :: (a -> b) -> List a -> List b
+    fmap _ Empty = Empty
+    fmap f (Cons a b) = Cons (f a) (fmap f b)
 
 {- |
 =🛡= Applicative
@@ -472,10 +477,12 @@ Implement the Applicative instance for our 'Secret' data type from before.
 -}
 instance Applicative (Secret e) where
     pure :: a -> Secret e a
-    pure = error "pure Secret: Not implemented!"
+    pure = Reward
 
     (<*>) :: Secret e (a -> b) -> Secret e a -> Secret e b
-    (<*>) = error "(<*>) Secret: Not implemented!"
+    (<*>) (Trap x) _ = (Trap x)
+    (<*>) (Reward f) x = fmap f x
+    
 
 {- |
 =⚔️= Task 5
@@ -488,7 +495,26 @@ Implement the 'Applicative' instance for our 'List' type.
   may also need to implement a few useful helper functions for our List
   type.
 -}
+{-
+data List a
+    = Empty
+    | Cons a (List a) deriving(Show)
 
+-}
+
+append :: List a -> List a -> List a
+append Empty l = l
+append l Empty = l
+append (Cons x xs) l = Cons x (append xs l)
+
+instance Applicative List where
+    pure :: a -> List a
+    pure a = Cons a Empty
+
+    (<*>) :: List (a -> b) -> List a -> List b
+    (<*>) _ Empty = Empty
+    (<*>) Empty _ = Empty
+    (<*>) (Cons f fx) x = append (fmap f x) (fx <*> x)
 
 {- |
 =🛡= Monad
@@ -600,7 +626,8 @@ Implement the 'Monad' instance for our 'Secret' type.
 -}
 instance Monad (Secret e) where
     (>>=) :: Secret e a -> (a -> Secret e b) -> Secret e b
-    (>>=) = error "bind Secret: Not implemented!"
+    (>>=) (Trap e) _ = Trap e
+    (>>=) (Reward a) f = f a
 
 {- |
 =⚔️= Task 7
@@ -610,6 +637,13 @@ Implement the 'Monad' instance for our lists.
 🕯 HINT: You probably will need to implement a helper function (or
   maybe a few) to flatten lists of lists to a single list.
 -}
+
+-- apppend function is already implemented above
+
+instance Monad List where
+    (>>=) :: List a -> (a -> List b) -> List b
+    (>>=) Empty _ = Empty
+    (>>=) (Cons a b) f = append (f a) (b >>= f)
 
 
 {- |
@@ -628,8 +662,11 @@ Can you implement a monad version of AND, polymorphic over any monad?
 
 🕯 HINT: Use "(>>=)", "pure" and anonymous function
 -}
+
+
 andM :: (Monad m) => m Bool -> m Bool -> m Bool
-andM = error "andM: Not implemented!"
+andM a b = (fmap (\x-> (&&) x) a) <*> b
+
 
 {- |
 =🐉= Task 9*: Final Dungeon Boss
@@ -671,6 +708,79 @@ Specifically,
  ❃ Implement the reverseTree function that reverses the tree and each
    subtree of a tree
  ❃ Implement the function to convert Tree to list
+-}
+
+
+data Btree a = Btree
+  {
+    lchild :: Btree a,
+    rchild :: Btree a,
+    value :: a
+  } | Null deriving (Show)
+
+instance Functor Btree where
+    fmap :: (a -> b) -> Btree a -> Btree b
+    fmap _ Null = Null
+    fmap f (Btree a b c) = Btree (fmap f a) (fmap f b) (f c)
+
+reverseTree :: Btree a -> Btree a
+reverseTree Null = Null
+reverseTree (Btree a b c) = Btree (reverseTree b) (reverseTree a) c
+
+convertTreeToList :: Btree a -> [a]
+convertTreeToList Null = []
+convertTreeToList (Btree a b c) = c:(convertTreeToList a) ++ (convertTreeToList b)
+
+
+n1 :: Btree Int
+n1 = Btree Null Null 1
+n2 :: Btree Int
+n2 = Btree Null Null 2
+n3 :: Btree Int
+n3 = Btree Null Null 3
+n4 :: Btree Int
+n4 = Btree Null Null 4
+n5 :: Btree Int
+n5 = Btree Null Null 5
+n6 :: Btree Int
+n6 = Btree Null Null 6
+n7 :: Btree Int
+n7 = Btree Null Null 7
+n8 :: Btree Int
+n8 = Btree Null Null 8
+n9 :: Btree Int
+n9 = Btree n1 n2 9
+n10 :: Btree Int
+n10 = Btree n3 n4 10
+n11 :: Btree Int
+n11 = Btree n5 n6 11
+n12 :: Btree Int
+n12 = Btree n7 n8 12
+n13 :: Btree Int
+n13 = Btree n9 n10 13
+n14 :: Btree Int
+n14 = Btree n11 n12 14
+n15 :: Btree Int
+n15 = Btree n13 n14 15
+root :: Btree Int
+root = n15
+
+{-
+
+                         15 
+                  13            14
+              9    10        11      12
+           1 2    3  4      5  6     7  8
+
+*Chapter4> convertTreeToList root
+[15,13,9,1,2,10,3,4,14,11,5,6,12,7,8]
+*Chapter4> convertTreeToList (reverseTree root)
+[15,14,12,8,7,11,6,5,13,10,4,3,9,2,1]
+*Chapter4> convertTreeToList (fmap (\x->0) root)
+[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+*Chapter4> convertTreeToList (fmap (\x->x*x) root)
+[225,169,81,1,4,100,9,16,196,121,25,36,144,49,64]
+
 -}
 
 
