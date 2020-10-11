@@ -126,7 +126,7 @@ Bool :: *
 Either :: * -> * -> *
 >>> data Trinity a b c = MkTrinity a b c
 >>> :k Trinity
-* -> * -> * -> *
+Trinity :: * -> * -> * -> *
 >>> data IntBox f = MkIntBox (f Int)
 >>> :k IntBox
 IntBox :: (* -> *) -> *
